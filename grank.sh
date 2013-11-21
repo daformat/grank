@@ -3,6 +3,7 @@
 # grank - find your google rank index
 #
 # 2008 - Mike Golvach - eggi@comcast.net
+# updated 2013 - Mathieu jouhet - @daformat
 #
 # Creative Commons Attribution-Noncommercial-Share Alike 3.0 United States License
 #
@@ -49,7 +50,8 @@ done
 echo "Searching For Google Index For $url With Search Terms: $search_terms..."
 echo
 
-num_results=`wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /of about <b>.*<\/b> for/ ) print $0 }'|awk -F"of about" '{print $2}'|awk -F"<b>" '{print $2}'|awk -F"</b>" '{print $1}'`
+num_results=`wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /.*bout .* results.*/ ) print $0 }'|awk -F"bout " '{print $2}'|awk -F" results" '{print $1}'`
+echo "About $num_results results found in google index"
 
 while :;
 do
@@ -57,10 +59,12 @@ do
         then
                 break
         fi
-        wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&num=100\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|sed 's/<a href=\"\([^\"]*\)\" class=l>/\n\1\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /^http/ ) print base,num++,$NF }'|awk '{ if ( $2 < 10 ) print "Google Index Number " $1 "0" $2 " For Page: " $3; else if ( $2 == 100 ) print "Google Index Number " $1+1 "00 For Page: " $3;else print "Google Index Number " $1 $2 " For Page: " $3 }'|grep -i $url
+        echo "Searching in 10 results, starting at result #$start"
+        wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&num=10\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|sed 's/.*<h3 class="r"><a href=\"\([^\"]*\)\">/\n\1\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "Google Index Number " $1 "0" $2 " For Page: " $3; else if ( $2 == 100 ) print "Google Index Number " $1+1 "00 For Page: " $3;else print "Google Index Number " $1 $2 " For Page: " $3 }'|sed 's/\(.*For Page: \).*q=\(.*\)&amp;sa=.*/\1\2/g'|grep -i $url
+
         if [ $? -ne 0 ]
         then
-                let start=$start+100
+                let start=$start+10
                 if [ $start -eq 1000 ]
                 then
                         not_found=1
