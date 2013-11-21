@@ -10,7 +10,7 @@ Find your google index rank using this bash script
 ```
 
 
-Where `url` is the url too look for in the google index and `search_term` is the search term to look for.
+Where `url` is the url too look for in the google index and `search_term` is the search term to look for.  
 You can add multiple search terms, they will get concatenated as a query string using the + delimitor.
 
 
@@ -19,14 +19,14 @@ You can add multiple search terms, they will get concatenated as a query string 
 	./grank.sh http://www.urbandictionary.com get a life
 ```
 
-Will search for urbandictionary.com's position here :
+Will search for urbandictionary.com's position here :  
 [http://www.google.com/search?q=get+a+life](http://www.google.com/search?q=get+a+life)
 
 
 
 ### Warning
 
-Google doesn't like bots playing with its index, if you make too many queries you will be blocked by google.
+Google doesn't like bots playing with its index, if you make too many queries you will be blocked by google.  
 The server will return a 503 error (service unavailable).
 
 ### Credits 
