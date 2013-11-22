@@ -55,14 +55,12 @@ ques="${txtbld}${txtylw}[?]${txtrst}"
 ok="${txtbld}${txtgrn}[ok]${txtrst}"
 
 
-echo
-echo "${txtwht}GRANK${txtrst}"
-echo
-
 # Wrong invocation, give some instructions
 if [ $# -lt 2 -a $# -ne 0 ]
 then
-
+        echo
+        echo "${txtwht}GRANK${txtrst}"
+        echo
         echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 ${txtund}URL${txtrst} ${txtund}search_term1${txtrst} [${txtund}search_term2${txtrst} ... ${txtund}search_termN${txtrst}]"
         echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
         echo 
@@ -75,8 +73,10 @@ fi
 # Invocation without parameters, interactive mode
 if [ $# -eq 0 ]
 then
+        echo
         echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
         read x
+        echo
         echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
         read y
 
@@ -100,11 +100,12 @@ do
         fi
 done
 
-echo "${txtwht}Searching Google index${txtrst} for ${txtund}$url${txtrst} with search query: ${txtund}$search_terms${txtrst}...${txtrst}"
+echo 
+echo "${txtwht}Searching Google index${txtrst} for ${txtund}$url${txtrst}..."
 
 # Get number of results in index
 num_results=`wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /.*bout .* results<\/div><div id="res">.*/ ) print $0 }'|awk -F"bout " '{print $2}'|awk -F" results" '{print $1}'`
-echo "About $num_results results found in google index"
+echo "${txtwht}About $num_results results${txtrst} found for query: ${txtund}$search_terms${txtrst}"
 
 # Debug
 if [ $debug -eq 1 ]
