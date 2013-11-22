@@ -12,7 +12,7 @@
 # Settings
 # ---------
 
-# how many results per page ?
+# how many results per page ? (Maximum is 100)
 results_per_page=100
 
 # Default behavior is to stop at the page where the url was found
@@ -58,8 +58,9 @@ ok="${txtbld}${txtgrn}[ok]${txtrst}"
 # Wrong invocation
 if [ $# -lt 2 -a $# -ne 0 ]
 then
-        echo "${txtbld}${txtylw}Usage: $0 URL Search_Term(s)${txtrst}"
-        echo "URLs ${txtund}with${txtrst} http(s)://, ftp://, etc"
+        echo "${txtbld}${txtylw}Usage: $0 URL search_term1 [search_term2 ... search_termN]${txtrst}"
+        echo "URLs ${txtund}with${txtrst} http:// or https://"
+        echo "So you don't get too much false positive"
         exit 1
 fi
 
