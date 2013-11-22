@@ -48,28 +48,36 @@ txtund=$(tput sgr 0 1)  # Underline
 txtbld=$(tput bold)     # Bold
 txtrst=$(tput sgr0)     # Reset
 
-# Feedback
+# Feedback helpers
 info="${txtbld}${txtcyn}[i]${txtrst}"
 warn="${txtbld}${txtred}[!]${txtrst}"
 ques="${txtbld}${txtylw}[?]${txtrst}"
 ok="${txtbld}${txtgrn}[ok]${txtrst}"
 
 
-# Wrong invocation
+echo
+echo "${txtwht}GRANK${txtrst}"
+echo
+
+# Wrong invocation, give some instructions
 if [ $# -lt 2 -a $# -ne 0 ]
 then
-        echo "${txtbld}${txtylw}Usage: $0 URL search_term1 [search_term2 ... search_termN]${txtrst}"
-        echo "URLs ${txtund}with${txtrst} http:// or https://"
-        echo "So you don't get too much false positive"
+
+        echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 ${txtund}URL${txtrst} ${txtund}search_term1${txtrst} [${txtund}search_term2${txtrst} ... ${txtund}search_termN${txtrst}]"
+        echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
+        echo 
+        echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
+        echo "  So you don't get too much false positive"
+        echo 
         exit 1
 fi
 
 # Invocation without parameters, interactive mode
 if [ $# -eq 0 ]
 then
-        echo "${txtbld}${txtylw}Please type the URL to look for:${txtrst}"
+        echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
         read x
-        echo "${txtbld}${txtylw}Please type the search terms:${txtrst}"
+        echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
         read y
 
         $0 $x "$y"
