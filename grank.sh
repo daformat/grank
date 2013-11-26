@@ -110,7 +110,7 @@ echo "${txtwht}About $num_results results${txtrst} found for query: ${txtund}$se
 # Debug
 if [ $debug -eq 1 ]
 then
-        echo "wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N"
+        echo "wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&num=$results_per_page\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N"
 fi
 
 
