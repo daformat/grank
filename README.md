@@ -1,7 +1,7 @@
 grank
 =====
 
-Find your google index rank using this bash script
+Find your google index rank using this bash script.
 
 ### Usage
 
