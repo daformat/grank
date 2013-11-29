@@ -21,7 +21,11 @@ results_per_page=100
 # Do this at your own risk
 search_all_results=0
 
+# set the host to use for scrapping
+search_host="google.com"
 
+# set the locale used for searching
+lang="en"
 
 ### Don't touch this ###
 # Those are needed for the script to work correctly
@@ -32,7 +36,7 @@ multiple_search=0
 not_found=0
 found=0
 output=0
-debug=0
+debug=1
 
 # Text color variables
 txtred=$(tput setaf 1) #  red
@@ -58,59 +62,80 @@ ok="${txtbld}${txtgrn}[ok]${txtrst}"
 # Wrong invocation, give some instructions
 if [ $# -lt 2 -a $# -ne 0 ]
 then
-        echo
-        echo "${txtwht}GRANK${txtrst}"
-        echo
-        echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 ${txtund}URL${txtrst} ${txtund}search_term1${txtrst} [${txtund}search_term2${txtrst} ... ${txtund}search_termN${txtrst}]"
-        echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
-        echo 
-        echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
-        echo "  So you don't get too much false positive"
-        echo 
-        exit 1
+    echo
+    echo "${txtwht}GRANK${txtrst}"
+    echo
+    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 ${txtund}URL${txtrst} ${txtund}search_term1${txtrst} [${txtund}search_term2${txtrst} ... ${txtund}search_termN${txtrst}]"
+    echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
+    echo 
+    echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
+    echo "  So you don't get too much false positive"
+    echo 
+    exit 1
 fi
+
+# Script Options
+while getopts "h:l:" option
+do
+    case "$option" in
+        h)
+            search_host=$OPTARG
+            shift $((OPTIND-1)); OPTIND=1
+        ;;
+        l)
+            lang=$OPTARG
+            shift $((OPTIND-1)); OPTIND=1
+        ;;
+        ?)
+            # no options was given
+        ;;
+    esac
+done
 
 # Invocation without parameters, interactive mode
 if [ $# -eq 0 ]
 then
-        echo
-        echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
-        read x
-        echo
-        echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
-        read y
+    echo
+    echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
+    read x
+    echo
+    echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
+    read y
 
-        $0 $x "$y"
-        exit 0
+    $0 $x "$y"
+    exit 0
 else
-        url=$1
-        shift
-        search_terms=$@
+# Invocation with parameters
+    url=$1
+    shift
+    search_terms=$@
 fi
+
+
 
 # Compute search query string
 for x in $search_terms
 do
-        if [ $multiple_search -eq 0 ]
-        then
-                search_string=$x
-                multiple_search=1
-        else
-                search_string="${search_string}+$x"
-        fi
+    if [ $multiple_search -eq 0 ]
+    then
+        search_string=$x
+        multiple_search=1
+    else
+        search_string="${search_string}+$x"
+    fi
 done
 
 echo 
-echo "${txtwht}Searching Google index${txtrst} for ${txtund}$url${txtrst}..."
+echo "${txtwht}Searching ${txtund}${txtcyn}$search_host${txtrst} index for ${txtund}${txtcyn}$url${txtrst}..."
 
 # Get number of results in index
-num_results=`wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /.*bout .* results<\/div><div id="res">.*/ ) print $0 }'|awk -F"bout " '{print $2}'|awk -F" results" '{print $1}'`
-echo "${txtwht}About $num_results results${txtrst} found for query: ${txtund}$search_terms${txtrst}"
+num_results=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /.*resultStats">.*<\/div><div id="res">.*/ ) print $0 }'|awk -F"resultStats\">" '{print $2}'|awk -F" results" '{print $1}'|sed 's/&#160;/,/g'|awk '{ match($0, "[0-9,]+") }{print substr($0, RSTART, RLENGTH)}'`
+echo "${txtwht}About ${txtcyn}$num_results${txtrst} results found for query: ${txtund}${txtcyn}$search_terms${txtrst}"
 
 # Debug
 if [ $debug -eq 1 ]
 then
-        echo "wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&num=$results_per_page\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N"
+    echo "wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
 fi
 
 
@@ -120,88 +145,88 @@ echo
 # Inifinite loop, will be broke anyways
 while :;
 do
-        # If we already searched everything and did not found, break
-        if [ $not_found -eq 1 ]
+    # If we already searched everything and did not found, break
+    if [ $not_found -eq 1 ]
+    then
+        break
+    fi
+
+
+    # Search for $url in next result page
+    echo "Searching $results_per_page results, starting at #$start"
+    output=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
+
+    # If we got an error, it probably means that we did not find $url
+    # Let's search in the next page
+    if [ $? -ne 0 ]
+    then
+        let start=$start+$results_per_page
+        if [ $start -eq 1000 ]
         then
+            not_found=1
+            if [ $not_found -eq 1 ]
+            then
                 break
+            fi
         fi
+        let base=$base+1
+        first_page=0
 
-
-        # Search for $url in next result page
-        echo "Searching $results_per_page results, starting at #$start"
-        output=`wget -q --user-agent=Firefox -O - http://www.google.com/search?q=$search_string\&num=$results_per_page\&hl=en\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
-
-        # If we got an error, it probably means that we did not find $url
-        # Let's search in the next page
-        if [ $? -ne 0 ]
-        then
-                let start=$start+$results_per_page
-                if [ $start -eq 1000 ]
-                then
-                        not_found=1
-                        if [ $not_found -eq 1 ]
-                        then
-                                break
-                        fi
-                fi
-                let base=$base+1
-                first_page=0
-
-        # If we did no get any error
-        else
-                # If no result was found previously
-                if [ $found -eq 0 ]
-                then
-                        # Store the first page where $url was found
-                        let found=$start+$results_per_page
-                fi
-                echo "$output";
-
-                # Now that we found something, should we continue
-                # until we reach 1000 results ?
-                if [ $search_all_results -ne 1 ]
-                then
-                        break
-                fi
-
-                # If we do, continue...
-                let start=$start+$results_per_page
-
-                # Google hard limit
-                if [ $start -eq 1000 ]
-                then
-                        break
-                fi
-
-                let base=$base+1
-                first_page=0
-
-        fi
-
-        # Random sleep time to behave more like a human
-        let sleep_time=${RANDOM}/600
-
-        # Output what's happening
+    # If we did no get any error
+    else
+        # If no result was found previously
         if [ $found -eq 0 ]
         then
-                echo "${info} Not found in top $start results: sleeping $sleep_time seconds..."
-        else
-                echo "${info} Found in top $found results."
-                echo "${txtwht}Script is setup to search through every results.${txtrst} Sleeping $sleep_time seconds..."
+            # Store the first page where $url was found
+            let found=$start+$results_per_page
         fi
-        echo 
+        echo "$output";
 
-        # Let's sleep a little so that we dont get blocked to quickly
-        sleep $sleep_time
+        # Now that we found something, should we continue
+        # until we reach 1000 results ?
+        if [ $search_all_results -ne 1 ]
+        then
+            break
+        fi
+
+        # If we do, continue...
+        let start=$start+$results_per_page
+
+        # Google hard limit
+        if [ $start -eq 1000 ]
+        then
+            break
+        fi
+
+        let base=$base+1
+        first_page=0
+
+    fi
+
+    # Random sleep time to behave more like a human
+    let sleep_time=${RANDOM}/600
+
+    # Output what's happening
+    if [ $found -eq 0 ]
+    then
+        echo "${info} Not found in top $start results: sleeping $sleep_time seconds..."
+    else
+        echo "${info} Found in top $found results."
+        echo "${txtwht}Script is setup to search through every results.${txtrst} Sleeping $sleep_time seconds..."
+    fi
+    echo 
+
+    # Let's sleep a little so that we dont get blocked to quickly
+    sleep $sleep_time
 done
 
 # Let's summarize what we did
 if [ $not_found -eq 1 ]
 then
-        echo "${warn} Not Found In First 1,000 Index Results - Google's Hard Limit"
+    echo "${warn} Not Found In First 1,000 Index Results - Google's Hard Limit"
 else
-        echo
-        echo "${txtgrn}Found in top $found results.${txtrst}"
+    echo
+    echo "${txtgrn}Found in top $found results.${txtrst}"
 fi
 
 echo
