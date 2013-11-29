@@ -6,11 +6,15 @@ Find your google index rank using this bash script.
 ### Usage
 
 ```shell
-	./grank.sh url search_term [search_term...]
+	./grank.sh [ -h host ] [ -l locale ] [ url ] [ search_term ... ]
 ```
 
 Where `url` is the url too look for in the google index and `search_term` is the search term to look for.  
 You can add multiple search terms, they will get concatenated as a query string using the + delimitor.
+
+**Options**
+'-h' specify the host to use (default is 'google.com', you can use other tld such as 'google.fr', google.it'...)
+'-l' is the locale to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
 
 **Example**
 ```shell
@@ -20,7 +24,7 @@ You can add multiple search terms, they will get concatenated as a query string 
 Will search for urbandictionary.com's position here :  
 [http://www.google.com/search?q=get+a+life](http://www.google.com/search?q=get+a+life)
 
-Alternatively, just launch the script **without** parameters, it will launch in interactive mode and ask you for the url and search terms.
+Alternatively, just launch the script **without** parameters, it will launch in interactive mode and ask you for the url and search terms, using the default host and locale.
 
 
 ### MacOSX users
