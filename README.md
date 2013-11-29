@@ -13,8 +13,9 @@ Where `url` is the url too look for in the google index and `search_term` is the
 You can add multiple search terms, they will get concatenated as a query string using the + delimitor.
 
 **Options**
-'-h' specify the host to use (default is 'google.com', you can use other tld such as 'google.fr', google.it'...)
-'-l' is the locale to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
+
+`-h` specify the host to use (default is 'google.com', you can use other tld such as 'google.fr', google.it'...)
+`-l` is the locale to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
 
 **Example**
 ```shell
