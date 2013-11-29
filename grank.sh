@@ -65,7 +65,7 @@ then
     echo
     echo "${txtwht}GRANK${txtrst}"
     echo
-    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 ${txtund}URL${txtrst} ${txtund}search_term1${txtrst} [${txtund}search_term2${txtrst} ... ${txtund}search_termN${txtrst}]"
+    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 [ -h ${txtund}host${txtrst}] [ -l ${txtund}locale${txtrst}] [${txtund}URL${txtrst}] [${txtund}search_term1${txtrst} ${txtund}...${txtrst}]"
     echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
     echo 
     echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
