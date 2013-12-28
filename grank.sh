@@ -1,10 +1,15 @@
 #!/bin/bash
 
 # grank - find your google rank index
-#
+# -----------------------------------
 # 2008 - Mike Golvach - eggi@comcast.net
 # updated 2013 - Mathieu jouhet - @daformat
 #
+# version: 0.5
+# lastmod: 2013/12/28
+#
+# License
+# -------
 # Creative Commons
 # Attribution-Noncommercial-Share Alike 3.0 United States License
 #
@@ -36,7 +41,7 @@ multiple_search=0
 not_found=0
 found=0
 output=0
-debug=1
+debug=0
 
 # Text color variables
 txtred=$(tput setaf 1) #  red
@@ -58,31 +63,27 @@ warn="${txtbld}${txtred}[!]${txtrst}"
 ques="${txtbld}${txtylw}[?]${txtrst}"
 ok="${txtbld}${txtgrn}[ok]${txtrst}"
 
-
-# Wrong invocation, give some instructions
-if [ $# -lt 2 -a $# -ne 0 ]
-then
-    echo
-    echo "${txtwht}GRANK${txtrst}"
-    echo
-    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 [ -h ${txtund}host${txtrst}] [ -l ${txtund}locale${txtrst}] [${txtund}URL${txtrst}] [${txtund}search_term1${txtrst} ${txtund}...${txtrst}]"
-    echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
-    echo 
-    echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
-    echo "  So you don't get too much false positive"
-    echo 
-    exit 1
-fi
-
 # Script Options
-while getopts "h:l:" option
+while getopts "avh:l:" option
 do
     case "$option" in
+        a)
+            # the script will continue searching even if a result was found
+            search_all_results=1
+            shift $((OPTIND-1)); OPTIND=1
+        ;;
+        v)
+            # verbosity
+            debug=$((debug+1))
+            shift $((OPTIND-1)); OPTIND=1
+        ;;
         h)
+            # set-up host
             search_host=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
         ;;
         l)
+            # set-up locale
             lang=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
         ;;
@@ -91,6 +92,21 @@ do
         ;;
     esac
 done
+
+# Wrong invocation, give some instructions
+if [ $# -lt 2 -a $# -ne 0 ]
+then
+    echo
+    echo "${txtwht}GRANK${txtrst}"
+    echo
+    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 [-a] [ -h ${txtund}host${txtrst}] [ -l ${txtund}locale${txtrst}] [${txtund}URL${txtrst}] [${txtund}search_term1${txtrst} ${txtund}...${txtrst}]"
+    echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
+    echo 
+    echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
+    echo "  So you don't get too much false positive"
+    echo 
+    exit 1
+fi
 
 # Invocation without parameters, interactive mode
 if [ $# -eq 0 ]
@@ -105,6 +121,7 @@ then
     $0 $x "$y"
     exit 0
 else
+    
 # Invocation with parameters
     url=$1
     shift
@@ -133,7 +150,7 @@ num_results=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=
 echo "${txtwht}About ${txtcyn}$num_results${txtrst} results found for query: ${txtund}${txtcyn}$search_terms${txtrst}"
 
 # Debug
-if [ $debug -eq 1 ]
+if [ $debug -gt 0 ]
 then
     echo "wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
 fi
@@ -154,7 +171,16 @@ do
 
     # Search for $url in next result page
     echo "Searching $results_per_page results, starting at #$start"
-    output=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
+    
+    wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N`
+    
+    if [ $? -ne 0 ]
+    then
+        echo "${warn} Error while getting remote data"
+        exit 1
+    fi
+
+    output=`echo $wgetoutput|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
 
     # If we got an error, it probably means that we did not find $url
     # Let's search in the next page

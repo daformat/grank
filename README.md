@@ -6,7 +6,7 @@ Find your google index rank using this bash script.
 ### Usage
 
 ```shell
-	./grank.sh [ -h host ] [ -l locale ] [ url ] [ search_term ... ]
+	./grank.sh [-a] [ -h host ] [ -l locale ] [ url ] [ search_term ... ]
 ```
 
 Where `url` is the url too look for in the google index and `search_term` is the search term to look for.  
@@ -14,6 +14,7 @@ You can add multiple search terms, they will get concatenated as a query string 
 
 **Options**
 
+`-a` Use this flag if you want the script to continue searching through all 1000 first google results.  
 `-h` specify the host to use (default is 'google.com', you can use other tld such as 'google.fr', google.it'...)  
 `-l` is the locale to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
 
