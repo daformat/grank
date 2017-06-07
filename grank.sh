@@ -66,66 +66,74 @@ ok="${txtbld}${txtgrn}[ok]${txtrst}"
 # Script Options
 while getopts "avh:l:" option
 do
-    case "$option" in
-        a)
-            # the script will continue searching even if a result was found
-            search_all_results=1
-            shift $((OPTIND-1)); OPTIND=1
-        ;;
-        v)
-            # verbosity
-            debug=$((debug+1))
-            shift $((OPTIND-1)); OPTIND=1
-        ;;
-        h)
-            # set-up host
-            search_host=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
-        ;;
-        l)
-            # set-up locale
-            lang=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
-        ;;
-        ?)
-            # no options was given
-        ;;
-    esac
+  case "$option" in
+    a)
+    # the script will continue searching even if a result was found
+    search_all_results=1
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    v)
+    # verbosity
+    debug=$((debug+1))
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    h)
+    # set-up host
+    search_host=$OPTARG
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    l)
+    # set-up locale
+    lang=$OPTARG
+    shift $((OPTIND-1)); OPTIND=1
+    ;;
+    ?)
+    # no options was given
+    ;;
+  esac
 done
 
 # Wrong invocation, give some instructions
-if [ $# -lt 2 -a $# -ne 0 ]
+if [ $# -lt 2 -a $# -ne 0 -o $1 == "help" ]
 then
-    echo
-    echo "${txtwht}GRANK${txtrst}"
-    echo
-    echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 [-a] [ -h ${txtund}host${txtrst}] [ -l ${txtund}locale${txtrst}] [${txtund}URL${txtrst}] [${txtund}search_term1${txtrst} ${txtund}...${txtrst}]"
-    echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
-    echo 
-    echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
-    echo "  So you don't get too much false positive"
-    echo 
-    exit 1
-fi
-
-# Invocation without parameters, interactive mode
-if [ $# -eq 0 ]
+  echo
+  echo "${txtwht}GRANK${txtrst}"
+  echo
+  echo "  ${txtbld}${txtylw}Usage:${txtrst} $0 [-a] [ -h ${txtund}host${txtrst}] [ -l ${txtund}locale${txtrst}] [${txtund}URL${txtrst}] [${txtund}search_term1${txtrst} ${txtund}...${txtrst}]"
+  echo "  ${txtbld}${txtylw}Or${txtrst} launch without parameters to get into interactive mode"
+  echo
+  echo "  URL should be given ${txtund}with${txtrst} http:// or https://"
+  echo "  So you don't get too much false positive"
+  echo
+  exit 1
+  # Invocation without parameters, interactive mode
+elif [ $# -eq 0 ]
 then
-    echo
-    echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
-    read x
-    echo
-    echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
-    read y
+  echo
+  echo "${txtbld}${txtcyn}Please type the URL to look for:${txtrst}"
+  read x
+  echo
+  echo "${txtbld}${txtcyn}Please type the search terms:${txtrst}"
+  read y
 
-    $0 $x "$y"
-    exit 0
+  $0 $x "$y"
+  exit 0
 else
-    
-# Invocation with parameters
-    url=$1
-    shift
-    search_terms=$@
+  # Invocation with parameters
+  url=$1
+  shift
+  search_terms=$@
+
+  # Debug
+  if [ $debug -gt 0 ]
+  then
+    echo "$info Debug: $debug"
+    echo "$info Continue after first match: $search_all_results"
+    echo "$info Search Host: $search_host"
+    echo "$info Locale: $lang"
+    echo "$info Looking results linking to: $url"
+    echo "$info For query: "$search_terms
+  fi
 fi
 
 
@@ -133,16 +141,16 @@ fi
 # Compute search query string
 for x in $search_terms
 do
-    if [ $multiple_search -eq 0 ]
-    then
-        search_string=$x
-        multiple_search=1
-    else
-        search_string="${search_string}+$x"
-    fi
+  if [ $multiple_search -eq 0 ]
+  then
+    search_string=$x
+    multiple_search=1
+  else
+    search_string="${search_string}+$x"
+  fi
 done
 
-echo 
+echo
 echo "${txtwht}Searching ${txtund}${txtcyn}$search_host${txtrst} index for ${txtund}${txtcyn}$url${txtrst}..."
 
 # Get number of results in index
@@ -152,7 +160,7 @@ echo "${txtwht}About ${txtcyn}$num_results${txtrst} results found for query: ${t
 # Debug
 if [ $debug -gt 0 ]
 then
-    echo "wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
+  echo "$info wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
 fi
 
 
@@ -162,97 +170,97 @@ echo
 # Inifinite loop, will be broke anyways
 while :;
 do
-    # If we already searched everything and did not found, break
-    if [ $not_found -eq 1 ]
+  # If we already searched everything and did not found, break
+  if [ $not_found -eq 1 ]
+  then
+    break
+  fi
+
+
+  # Search for $url in next result page
+  echo "Searching $results_per_page results, starting at #$start"
+
+  wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N`
+
+  if [ $? -ne 0 ]
+  then
+    echo "${warn} Error while getting remote data"
+    exit 1
+  fi
+
+  output=`echo $wgetoutput|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
+
+  # If we got an error, it probably means that we did not find $url
+  # Let's search in the next page
+  if [ $? -ne 0 ]
+  then
+    let start=$start+$results_per_page
+    if [ $start -eq 1000 ]
     then
+      not_found=1
+      if [ $not_found -eq 1 ]
+      then
         break
+      fi
     fi
-
-
-    # Search for $url in next result page
-    echo "Searching $results_per_page results, starting at #$start"
-    
-    wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N`
-    
-    if [ $? -ne 0 ]
-    then
-        echo "${warn} Error while getting remote data"
-        exit 1
-    fi
-
-    output=`echo $wgetoutput|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
-
-    # If we got an error, it probably means that we did not find $url
-    # Let's search in the next page
-    if [ $? -ne 0 ]
-    then
-        let start=$start+$results_per_page
-        if [ $start -eq 1000 ]
-        then
-            not_found=1
-            if [ $not_found -eq 1 ]
-            then
-                break
-            fi
-        fi
-        let base=$base+1
-        first_page=0
+    let base=$base+1
+    first_page=0
 
     # If we did no get any error
-    else
-        # If no result was found previously
-        if [ $found -eq 0 ]
-        then
-            # Store the first page where $url was found
-            let found=$start+$results_per_page
-        fi
-        echo "$output";
-
-        # Now that we found something, should we continue
-        # until we reach 1000 results ?
-        if [ $search_all_results -ne 1 ]
-        then
-            break
-        fi
-
-        # If we do, continue...
-        let start=$start+$results_per_page
-
-        # Google hard limit
-        if [ $start -eq 1000 ]
-        then
-            break
-        fi
-
-        let base=$base+1
-        first_page=0
-
-    fi
-
-    # Random sleep time to behave more like a human
-    let sleep_time=${RANDOM}/600
-
-    # Output what's happening
+  else
+    # If no result was found previously
     if [ $found -eq 0 ]
     then
-        echo "${info} Not found in top $start results: sleeping $sleep_time seconds..."
-    else
-        echo "${info} Found in top $found results."
-        echo "${txtwht}Script is setup to search through every results.${txtrst} Sleeping $sleep_time seconds..."
+      # Store the first page where $url was found
+      let found=$start+$results_per_page
     fi
-    echo 
+    echo "$output";
 
-    # Let's sleep a little so that we dont get blocked to quickly
-    sleep $sleep_time
+    # Now that we found something, should we continue
+    # until we reach 1000 results ?
+    if [ $search_all_results -ne 1 ]
+    then
+      break
+    fi
+
+    # If we do, continue...
+    let start=$start+$results_per_page
+
+    # Google hard limit
+    if [ $start -eq 1000 ]
+    then
+      break
+    fi
+
+    let base=$base+1
+    first_page=0
+
+  fi
+
+  # Random sleep time to behave more like a human
+  let sleep_time=${RANDOM}/600
+
+  # Output what's happening
+  if [ $found -eq 0 ]
+  then
+    echo "${info} Not found in top $start results: sleeping $sleep_time seconds..."
+  else
+    echo "${info} Found in top $found results."
+    echo "${txtwht}Script is setup to search through every results.${txtrst} Sleeping $sleep_time seconds..."
+  fi
+  echo
+
+  # Let's sleep a little so that we dont get blocked to quickly
+  sleep $sleep_time
 done
 
 # Let's summarize what we did
 if [ $not_found -eq 1 ]
 then
-    echo "${warn} Not Found In First 1,000 Index Results - Google's Hard Limit"
+  echo "${warn} Not Found In First 1,000 Index Results - Google's Hard Limit"
 else
-    echo
-    echo "${txtgrn}Found in top $found results.${txtrst}"
+  echo
+  echo "${txtgrn}Found in top $found results.${txtrst}"
 fi
 
 echo
