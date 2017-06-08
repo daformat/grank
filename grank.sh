@@ -250,7 +250,7 @@ do
   fi
 
   # Random sleep time to behave more like a human
-  let sleep_time=${RANDOM}/600
+  let sleep_time=${RANDOM}/1200
 
   # Output what's happening
   if [ $found -eq 0 ]
@@ -258,6 +258,7 @@ do
     echo "${info} Not found in top $start results: sleeping $sleep_time seconds..."
   else
     echo "${info} Found in top $found results."
+    echo
     echo "${txtwht}Script is setup to search through every results.${txtrst} Sleeping $sleep_time seconds..."
   fi
   echo
