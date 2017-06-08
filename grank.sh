@@ -232,23 +232,19 @@ do
   echo "$current_page_num_results results in the current page."
   output=`echo $wgetoutput|awk '{ gsub(/<h3 class/,"\n <h3 class"); print }'|sed 's/.*\(<h3 class="r">\)<a href=\"\([^\"]*\)\">/\n\2\n/g'|awk -v num=$num -v base=$base '{ if ( $1 ~ /http/ ) print base,num++,$0 }'|awk '{ if ( $2 < 10 ) print "# " $1 "0" $2 " for page: " $3; else if ( $2 == 100 ) print "# " $1+1 "00 for page: " $3;else print "# " $1 $2 " for page: " $3 }'|sed "s/\(.*for page: \).*q=\(.*\)&amp;sa=.*/$ok \1\2/g"|grep -i $url`
 
-  # If we got an error, it probably means that we did not find $url
-  # Let's search in the next page
+  # If we got an error, it means that we did not find $url in the
+  # current search results. Let's search in the next page
   if [ $? -ne 0 ]
   then
     let start=$start+$results_per_page
+    # break once we reach a thousand results
     if [ $start -eq 1000 ]
     then
-      not_found=1
-      if [ $not_found -eq 1 ]
-      then
-        break
-      fi
+      break
     fi
     let base=$base+1
-    first_page=0
 
-    # If we did no get any error
+  # If we didn't get any error
   else
     # If no result was found previously
     if [ $found -eq 0 ]
@@ -275,7 +271,6 @@ do
     fi
 
     let base=$base+1
-    first_page=0
 
   fi
 
