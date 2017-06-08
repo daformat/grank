@@ -14,9 +14,9 @@ You can add multiple search terms, they will get concatenated as a query string 
 
 **Options**
 
-`-a` Use this flag if you want the script to continue searching through all 1000 first google results.  
-`-h` specify the host to use (default is 'google.com', you can use other tld such as 'google.fr', google.it'...)  
-`-l` is the locale to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
+`-a` Use this flag if you want the script to continue searching through **all** 1000 first google results.  
+`-h` specify the **host** to use (default is 'google.com', you can use other domains such as 'google.fr', google.it'...)  
+`-l` is the **locale** to use (default is 'en', you can any other locale supported by google such as 'fr', 'it'...)
 
 **Example**
 ```shell
@@ -29,7 +29,7 @@ Will search for urbandictionary.com's position here :
 Alternatively, just launch the script **without** parameters, it will launch in interactive mode and ask you for the url and search terms, using the default host and locale.
 
 
-### MacOSX users
+### MacOS users
 If you get this error:
 ```
 	sed: RE error: illegal byte sequence
@@ -41,6 +41,7 @@ Type those commands, or add them to your ~/.bash_profile if you don't want to do
 	export LANG=C
 ```
 
+Alternatively, installing gnu-sed should definitely improve you overall scripting experience on MacOS.
 
 ### Warning
 
@@ -48,9 +49,9 @@ Google doesn't like bots scraping its index, if you make too many queries you wi
 The server will return a 503 error (service unavailable).
 
 
-### Credits 
+### Credits
 
-Initial (2008) script by Mike Golvach - [Original script here](http://linuxshellaccount.blogspot.fr/2008/08/finding-your-google-index-rank-with.html) 
+Initial (2008) script by Mike Golvach - [Original script here](http://linuxshellaccount.blogspot.fr/2008/08/finding-your-google-index-rank-with.html)
 
 Heavily tweaked by Mathieu Jouhet (@daformat)
 
