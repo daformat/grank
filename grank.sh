@@ -153,15 +153,36 @@ done
 echo
 echo "${txtwht}Searching ${txtund}${txtcyn}$search_host${txtrst} index for ${txtund}${txtcyn}$url${txtrst}..."
 
-# Get number of results in index
-wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N | iconv -f ISO-8859-1`
-num_results=`echo $wgetoutput | grep -oE 'resultStats">([^<])*' | sed "s/&#160;/,/g" | sed 's/.*\s\([0-9,]\+\)\s.*/\1/'`
+# We issue a first request to get the total number of results in Google index
+# We could definitely use this first search request for the first page, but I'm lazy :)
+search_page_url="http://www.$search_host/search?q=$search_string\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N"
+
+# Perform the search request
+wgetoutput=`wget -S --user-agent=Firefox -O - $search_page_url 2>&1`
+if [ $? -ne 0 ]
+then
+  error503=`echo $wgetoutput | grep -oE "503:? Service Unavailable" | wc -l`
+  if [ $error503 -ne 0 ]
+  then
+    echo "${warn} Got an error 503. Google is cooling you down..."
+  else
+    echo "${warn} Error while getting remote data."
+    echo $wgetoutput
+  fi
+  exit 1
+fi
+
+# Convert to UTF-8
+wgetoutput=`echo $wgetoutput | iconv -f ISO-8859-1`
+
+# Lookup the approximate number of results in Google index
+num_results=`echo $wgetoutput | grep -oE 'resultStats">([^<])*' | sed "s/\(&#160;\|\.\)/,/g" | sed 's/.*\s\([0-9,]\+\)\s.*/\1/'`
 echo "${txtwht}About ${txtcyn}$num_results${txtrst} results found for query: ${txtund}${txtcyn}$search_terms${txtrst}"
 
 # Debug
 if [ $debug -gt 0 ]
 then
-  echo "$info wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
+  echo "$info wget --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
 fi
 
 
@@ -184,12 +205,21 @@ do
   echo "${txtcyn}$search_page_url${txtrst}"
 
   # Perform the search request
-  wgetoutput=`wget -q --user-agent=Firefox -O - $search_page_url | iconv -f ISO-8859-1`
+  wgetoutput=`wget --user-agent=Firefox -O - $search_page_url 2>&1`
   if [ $? -ne 0 ]
   then
-    echo "${warn} Error while getting remote data"
+    error503=`echo $wgetoutput | grep -oE "503:? Service Unavailable" | wc -l`
+    if [ $error503 -ne 0 ]
+    then
+      echo "${warn} Got an error 503. Google is cooling you down..."
+    else
+      echo "${warn} Error while getting remote data"
+      echo $wgetoutput
+    fi
     exit 1
   fi
+
+  wgetoutput=`echo $wgetoutput | iconv -f ISO-8859-1`
 
   # Check we actually have results in the current page
   current_page_num_results=`echo $wgetoutput | grep -o '<h3 class="r">' | wc -l`
