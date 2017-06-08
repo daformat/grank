@@ -178,12 +178,13 @@ do
   fi
 
 
-  # Search for $url in next result page
+  # Prepare $url of the next next result page
   search_page_url="http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
-  wgetoutput=`wget -q --user-agent=Firefox -O - $search_page_url | iconv -f ISO-8859-1`
   echo "Searching $results_per_page results, starting at #$start"
   echo "${txtcyn}$search_page_url${txtrst}"
 
+  # Perform the search request
+  wgetoutput=`wget -q --user-agent=Firefox -O - $search_page_url | iconv -f ISO-8859-1`
   if [ $? -ne 0 ]
   then
     echo "${warn} Error while getting remote data"
