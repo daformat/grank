@@ -154,7 +154,8 @@ echo
 echo "${txtwht}Searching ${txtund}${txtcyn}$search_host${txtrst} index for ${txtund}${txtcyn}$url${txtrst}..."
 
 # Get number of results in index
-num_results=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N|awk '{ if ( $0 ~ /.*resultStats">.*<\/div><div id="res">.*/ ) print $0 }'|awk -F"resultStats\">" '{print $2}'|awk -F" results" '{print $1}'|sed 's/&#160;/,/g'|awk '{ match($0, "[0-9,]+") }{print substr($0, RSTART, RLENGTH)}'`
+wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N | iconv -f ISO-8859-1`
+num_results=`echo $wgetoutput | grep -oE 'resultStats">([^<])*' | sed "s/&#160;/,/g" | sed 's/.*\s\([0-9,]\+\)\s.*/\1/'`
 echo "${txtwht}About ${txtcyn}$num_results${txtrst} results found for query: ${txtund}${txtcyn}$search_terms${txtrst}"
 
 # Debug
@@ -178,9 +179,10 @@ do
 
 
   # Search for $url in next result page
+  search_page_url="http://www.$search_host/search?q=$search_string&num=$results_per_page&hl=$lang&safe=off&pwst=1&start=$start&sa=N"
+  wgetoutput=`wget -q --user-agent=Firefox -O - $search_page_url | iconv -f ISO-8859-1`
   echo "Searching $results_per_page results, starting at #$start"
-
-  wgetoutput=`wget -q --user-agent=Firefox -O - http://www.$search_host/search?q=$search_string\&num=$results_per_page\&hl=$lang\&safe=off\&pwst=1\&start=$start\&sa=N`
+  echo "${txtcyn}$search_page_url${txtrst}"
 
   if [ $? -ne 0 ]
   then
